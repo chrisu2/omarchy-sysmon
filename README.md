@@ -29,6 +29,12 @@ If Omarchy does not choose a placement automatically:
 omarchy plugin enable chris.sysmon right
 ```
 
+## Remove
+
+```bash
+omarchy plugin remove chris.sysmon --yes
+```
+
 ## License
 
 MIT
