@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "chris.sysmon",
+  "name": "System Monitor",
+  "version": "1.0.0",
+  "author": "Chris Underwood",
+  "description": "Live CPU, GPU, temperature, and network activity",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "System Monitor",
+    "description": "CPU/GPU load and temperature with download/upload speeds",
+    "category": "System",
+    "allowMultiple": false
+  }
+}
