@@ -2,6 +2,10 @@
 
 set -u
 
+readonly SLEEP=/usr/bin/sleep
+readonly TIMEOUT=/usr/bin/timeout
+readonly NVIDIA_SMI=/usr/bin/nvidia-smi
+
 read_cpu() {
   read -r _ user nice system idle iowait irq softirq steal _ < /proc/stat
   CPU_IDLE=$((idle + iowait))
@@ -53,17 +57,25 @@ cpu_temp() {
 }
 
 gpu_stats() {
-  local result card busy temp input
-  if command -v nvidia-smi >/dev/null 2>&1; then
-    result=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -n1 | tr -d ' ')
-    if [[ $result =~ ^([0-9]+),([0-9]+)$ ]]; then
+  local result first_line card busy temp input
+  GPU_LOAD=-1
+  GPU_TEMP=-1
+
+  if [[ -x $NVIDIA_SMI && -x $TIMEOUT ]]; then
+    result=$("$TIMEOUT" --kill-after=1s 2s "$NVIDIA_SMI" \
+      --query-gpu=utilization.gpu,temperature.gpu \
+      --format=csv,noheader,nounits 2>/dev/null) || result=''
+
+    # Bound parsing to the first record and normalize spaces using Bash only.
+    first_line=${result%%$'\n'*}
+    first_line=${first_line// /}
+    if [[ $first_line =~ ^([0-9]+),([0-9]+)$ ]]; then
       GPU_LOAD=${BASH_REMATCH[1]}
       GPU_TEMP=${BASH_REMATCH[2]}
       return
     fi
   fi
-  GPU_LOAD=-1
-  GPU_TEMP=-1
+
   for card in /sys/class/drm/card*; do
     [[ -r $card/device/gpu_busy_percent ]] || continue
     busy=$(<"$card/device/gpu_busy_percent")
@@ -85,7 +97,7 @@ read_network
 previous_rx=$NET_RX
 previous_tx=$NET_TX
 
-while sleep 2; do
+while "$SLEEP" 2; do
   read_cpu
   total_delta=$((CPU_TOTAL - previous_total))
   idle_delta=$((CPU_IDLE - previous_idle))
