@@ -66,7 +66,7 @@ BarWidget {
 
   Process {
     id: statsProcess
-    command: ["bash", root.helperPath]
+    command: ["/usr/bin/bash", root.helperPath]
     running: true
     stdout: SplitParser {
       onRead: function(line) {
